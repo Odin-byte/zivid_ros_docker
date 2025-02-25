@@ -34,6 +34,7 @@ docker run -it --rm \
     --volume $XSOCK:$XSOCK:rw \
     --volume $XAUTH:$XAUTH:rw \
     --volume ./config:$USER_HOME/.config/Zivid/API:rw \
+    --volume ./capture_settings:$USER_HOME/catkin_ws/config/capture_settings/:rw \
     --volume /etc/OpenCL/vendors:/etc/OpenCL/vendors:ro \
     --privileged \
     --gpus all \

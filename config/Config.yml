@@ -1,4 +1,6 @@
 __version__: 4
 Configuration:
-  ComputeDevice:
-    Type: CPU
+    ComputeDevice:
+        SelectionFilter: ""
+        Type: GPU
+        Vendor: Nvidia

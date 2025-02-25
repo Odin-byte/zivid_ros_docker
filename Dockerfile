@@ -17,7 +17,8 @@ WORKDIR $WORKDIR
 RUN chown -R $USERNAME:$USERNAME $WORKDIR
 
 # Install prequisites
-RUN sudo apt-get update && apt-get install -y python3-catkin-tools python3-osrf-pycommon git wget ocl-icd-libopencl1 pocl-opencl-icd clinfo
+RUN sudo apt-get update && apt-get install -y python3-catkin-tools python3-osrf-pycommon git wget \
+     g++ python3-rosdep build-essential ros-noetic-rqt-reconfigure python3-rospkg ros-noetic-rviz
 
 # Switch to non-root user
 USER $USERNAME
@@ -31,9 +32,27 @@ RUN mkdir Zivid && cd Zivid && wget \
 
 RUN cd Zivid && sudo apt update && sudo apt install -y ./*.deb
 
-RUN mkdir --parents $WORKDIR/Zivid/API
+# Cleanup after install 
+
+RUN rm -r Zivid/
+
+# Switch to non-root user
+USER $USERNAME  
+
+# Get ROS1 Driver from github repo and install with dependencies
+RUN bash -c "source /opt/ros/noetic/setup.bash && \
+    mkdir -p ~/catkin_ws/src && \
+    cd ~/catkin_ws/src && \
+    git clone https://github.com/Odin-byte/zivid-ros.git -b ros1-sdk-2.14.0 && \
+    cd ~/catkin_ws && \
+    sudo apt-get update && \
+    sudo rosdep init && \
+    rosdep update && \
+    rosdep install --from-paths src --ignore-src -r -y && \
+    catkin build"
 
 # Source ROS environment and set up entrypoint
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+RUN echo "source /home/$USERNAME/catkin_ws/devel/setup.bash" >> ~/.bashrc
 
 CMD ["bash"]

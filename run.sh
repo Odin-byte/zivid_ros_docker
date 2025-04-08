@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set default values if not provided
-IMAGE_NAME=${1:-zivid2_plus_m130_ros_1}
+IMAGE_NAME=${1:-zivid2_plus_m130_ros_2}
 CONTAINER_NAME=${2:-zivid_driver}
 USER_HOME=${3:-/home/ros}
 
@@ -34,7 +34,7 @@ docker run -it --rm \
     --volume $XSOCK:$XSOCK:rw \
     --volume $XAUTH:$XAUTH:rw \
     --volume ./config:$USER_HOME/.config/Zivid/API:rw \
-    --volume ./capture_settings:$USER_HOME/catkin_ws/config/capture_settings/:rw \
+    --volume ./capture_settings:$USER_HOME/ros2_ws/config/capture_settings/:rw \
     --volume /etc/OpenCL/vendors:/etc/OpenCL/vendors:ro \
     --privileged \
     --gpus all \

@@ -1,4 +1,4 @@
-FROM ros:jazzy-ros-base
+FROM ros:humble-ros-base
 
 # Define user and home directory
 ARG USERNAME=ros
@@ -16,31 +16,30 @@ RUN groupadd --gid $USER_GID $USERNAME \
 WORKDIR $WORKDIR
 RUN chown -R $USERNAME:$USERNAME $WORKDIR
 
-# Install prequisites
+# Install prerequisites
 RUN sudo apt-get update && apt-get install -y git wget \
-     g++
+    g++
 
 # Switch to non-root user
 USER $USERNAME
 
 # Create tmp folder for Zivid Core install
 RUN mkdir Zivid && cd Zivid && wget \
-https://downloads.zivid.com/sdk/releases/2.15.0+5fcc365b-1/u24/amd64/zivid_2.15.0+5fcc365b-1_amd64.deb \
-https://downloads.zivid.com/sdk/releases/2.15.0+5fcc365b-1/u24/amd64/zivid-studio_2.15.0+5fcc365b-1_amd64.deb \
-https://downloads.zivid.com/sdk/releases/2.15.0+5fcc365b-1/u24/amd64/zivid-tools_2.15.0+5fcc365b-1_amd64.deb \
-https://downloads.zivid.com/sdk/releases/2.15.0+5fcc365b-1/u24/amd64/zivid-genicam_2.15.0+5fcc365b-1_amd64.deb
+    https://downloads.zivid.com/sdk/releases/2.15.0+5fcc365b-1/u24/amd64/zivid_2.15.0+5fcc365b-1_amd64.deb \
+    https://downloads.zivid.com/sdk/releases/2.15.0+5fcc365b-1/u24/amd64/zivid-studio_2.15.0+5fcc365b-1_amd64.deb \
+    https://downloads.zivid.com/sdk/releases/2.15.0+5fcc365b-1/u24/amd64/zivid-tools_2.15.0+5fcc365b-1_amd64.deb \
+    https://downloads.zivid.com/sdk/releases/2.15.0+5fcc365b-1/u24/amd64/zivid-genicam_2.15.0+5fcc365b-1_amd64.deb
 
 RUN cd Zivid && sudo apt update && sudo apt install -y ./*.deb
 
 # Cleanup after install 
-
 RUN rm -r Zivid/
 
 # Switch to non-root user
 USER $USERNAME  
 
 # Get ROS1 Driver from github repo and install with dependencies
-RUN bash -c "source /opt/ros/jazzy/setup.bash && \
+RUN bash -c "source /opt/ros/humble/setup.bash && \
     mkdir -p ~/ros2_ws/src && \
     cd ~/ros2_ws/src && \
     git clone https://github.com/zivid/zivid-ros.git && \
@@ -51,7 +50,16 @@ RUN bash -c "source /opt/ros/jazzy/setup.bash && \
     colcon build --symlink-install"
 
 # Source ROS environment and set up entrypoint
-RUN echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "source /home/$USERNAME/ros2_ws/install/setup.bash" >> ~/.bashrc
+
+# Copy volumes into the container
+COPY ./config $WORKDIR/.config/Zivid/API
+COPY ./capture_settings $WORKDIR/ros2_ws/config/capture_settings/
+COPY ./zivid_helper_scripts $WORKDIR/ros2_ws/zivid_helper_scripts/
+# Check if vendors directory exists and is not empty before copying
+RUN if [ -d /etc/OpenCL/vendors ] && [ "$(ls -A /etc/OpenCL/vendors)" ]; then \
+    cp -r /etc/OpenCL/vendors /etc/OpenCL/vendors; \
+fi
 
 CMD ["bash"]
